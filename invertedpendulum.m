@@ -8,7 +8,7 @@ b=0.1; %N/m/sec
 I=0.006; %kg.^2
 g=9.8;
 l=0.3; %m
-%% From CTSS to DTSS Model
+%% From Linearized CTSS to DTSS Model
 denum=(I*(M+m)+M*m*(l^2));
 A22=-((I+m*(l^2))*b)/denum;
 A23=(m^2*g*l^2)/denum;
@@ -45,11 +45,11 @@ observability=rank(obsv(A,C));
 tf1=tf(num(1,:),den);
 tf2=tf(num(2,:),den);
 
-%% LQR Design
-N=180;
-Q=1*(C'*C);
+%% LQR Design - Finite Horizon
+N=100;
+Q=10*(C'*C);
 Qf=Q;
-R=0.01;
+R=0.1;
 x0=[1;0;0;0];
 x=[x0;zeros((4*N-4),1)];
 x1=[x0(1,1);zeros(N,1)];
@@ -77,7 +77,8 @@ for i=1:1:N
 
 end
 time=linspace(0,N*T,N+1);
-subplot(3,2,1)
+figure;
+subplot(3,2,5)
 stairs(time(1,1:N),u,'LineWidth',2);
 title("u(t)");
 xlim([0 N*T]);
@@ -85,7 +86,7 @@ xlabel("Time (s)");
 ylabel("Force (N)");
 grid minor
 
-subplot(3,2,2)
+subplot(3,2,1)
 stairs(time,x1,'LineWidth',2);
 title("x(t)");
 xlabel("Time (s)");
@@ -95,13 +96,13 @@ grid minor
 
 subplot(3,2,3)
 stairs(time,x2,'LineWidth',2);
-title('dx(t)/dt');
+title('x-dot(t)');
 xlabel("Time (s)");
 ylabel("Speed (m/s)");
 xlim([0 N*T]);
 grid minor
 
-subplot(3,2,4)
+subplot(3,2,2)
 stairs(time,rad2deg(x3),'LineWidth',2);
 title('theta(t)');
 xlim([0 N*T]);
@@ -109,9 +110,73 @@ xlabel("Time (s)");
 ylabel("Angle (degree)");
 grid minor
 
-subplot(3,2,5)
+subplot(3,2,4)
 stairs(time,x4,'LineWidth',2);
-title("d theta(t)/dt");
+title("theta-dot(t)");
+xlabel("Time (s)");
+xlim([0 N*T]);
+ylabel("Angular speed (rad/sec)");
+grid minor
+ %% LQR Design - Infinite Horizon
+N=100;
+Q=10*(C'*C);
+Qf=100*Q;
+R=0.1;
+x0=[1;0;3;0];
+x=[x0;zeros((4*N-4),1)];
+x1=[x0(1,1);zeros(N,1)];
+x2=[x0(2,1);zeros(N,1)];
+x3=[x0(3,1);zeros(N,1)];
+x4=[x0(4,1);zeros(N,1)];
+u=zeros((N-1),1);
+[Pinf]=idare(A,B,Q,R);
+Kinf=((R+(B')*Pinf*B)^-1)*B'*Pinf*A;
+for i=1:1:N
+    u(i,1)=-Kinf*x(4*i-3:4*i,:);
+    x(4*i+1:4*i+4,:)=A*x(4*i-3:4*i,:)+B*u(i,1);
+    x1(i+1,1)=x(4*i+1,:);
+    x2(i+1,1)=x(4*i+2,:);
+    x3(i+1,1)=x(4*i+3,:);
+    x4(i+1,1)=x(4*i+4,:);
+end
+time=linspace(0,N*T,N+1);
+figure; 
+sgtitle('Infinite Horizon LQR Solution') 
+subplot(3,2,5)
+stairs(time(1,1:N),u,'LineWidth',2);
+title("u(t)");
+xlim([0 N*T]);
+xlabel("Time (s)");
+ylabel("Force (N)");
+grid minor
+
+subplot(3,2,1)
+stairs(time,x1,'LineWidth',2);
+title("x(t)");
+xlabel("Time (s)");
+xlim([0 N*T]);
+ylabel("Position (m)");
+grid minor
+
+subplot(3,2,3)
+stairs(time,x2,'LineWidth',2);
+title('x-dot(t)');
+xlabel("Time (s)");
+ylabel("Speed (m/s)");
+xlim([0 N*T]);
+grid minor
+
+subplot(3,2,2)
+stairs(time,rad2deg(x3),'LineWidth',2);
+title('theta(t)');
+xlim([0 N*T]);
+xlabel("Time (s)");
+ylabel("Angle (degree)");
+grid minor
+
+subplot(3,2,4)
+stairs(time,x4,'LineWidth',2);
+title("theta-dot(t)");
 xlabel("Time (s)");
 xlim([0 N*T]);
 ylabel("Angular speed (rad/sec)");
