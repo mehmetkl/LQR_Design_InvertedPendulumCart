@@ -1,4 +1,4 @@
-%% Mehmet KILIÇ - 498 TP
+%% Mehmet KILIÇ - 498 Term Project - Part1
 
 %% System Specs.
 T=1e-1;
@@ -13,14 +13,13 @@ denum=(I*(M+m)+M*m*(l^2));
 A22=-((I+m*(l^2))*b)/denum;
 A23=(m^2*g*l^2)/denum;
 A42=-m*l*b/denum;
-A43=m*g*l*(M+m)/denum;
 B21=(I+m*(l^2))/denum;
 B41=m*l/denum;
-
+A43=m*l*b/denum;
 Ac=[0 1 0 0;
     0 A22 A23 0;
     0 0 0 1;
-    0 A42 A42 0];
+    0 A42 A43 0];
 Bc=[0;B21;0;B41];
 Cc=[1 0 0 0;
     0 0 1 0];
